@@ -1,0 +1,51 @@
+# Build and push docker images to GCR
+name: 'github-docker-registry'
+description: Build Docker image and push to Github registry
+
+inputs:
+  image-name:
+    required: true
+    description: Docker image name
+    default: ''
+  chart-path:
+    required: false
+    description: set custom chart path
+    default: './'
+  git-token:
+    description: the git token used to operate on the git repository. If not specified it's loaded from the git credentials file
+    required: true
+    default: ''
+  version:
+    description: set version
+    required: false
+    default: 'snapshot'
+  git-username:
+    description: the git username used to operate on the git repository. If not specified it's loaded from the git credentials file
+    required: false
+    default: 'Actions Bot'
+  git-author-name:
+    description: the user name to git commit
+    required: false
+    default: ''
+  git-author-email:
+    description: the user email to git commit
+    required: false
+    default: 'no-reply@no-reply.users.github.com'
+runs:
+  using: composite
+  steps:
+    - name: Log in to GitHub Docker Registry
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: docker.pkg.github.com
+        username: ${{ github.actor }}
+        password: ${{ inputs.git-token }}
+    - name: Build and push Docker image
+      uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      with:
+        context: ./${{ inputs.chart-path }}
+        push: true
+        tags: |
+          docker.pkg.github.com/${{ github.repository }}/${{ inputs.image-name }}:${{ github.sha }}
+          docker.pkg.github.com/${{ github.repository }}/${{ inputs.image-name }}:${{ inputs.version }}
+          docker.pkg.github.com/${{ github.repository }}/${{ inputs.image-name }}:latest

@@ -1,0 +1,14 @@
+name: 'helm-package'
+description: Package helm chart
+
+inputs:
+  chart-path:
+    required: false
+    description: set custom chart path
+    default: './charts'
+runs:
+  using: composite
+  steps:
+    - name: helm package
+      run: helm package ${{ inputs.chart-path }}
+      shell: bash

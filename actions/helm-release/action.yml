@@ -1,0 +1,56 @@
+name: 'helm-release'
+description: Release helm chart
+
+inputs:
+  chart-path:
+    required: false
+    description: set custom chart path
+    default: './'
+  release-path:
+    required: true
+    description: set RELEASE or SNAPSHOTS dir
+    default: 'snapshots'
+  git-token:
+    description: the git token used to operate on the git repository. If not specified it's loaded from the git credentials file
+    required: true
+    default: ''
+  repo-url:
+    description: the git token used to operate on the git repository. If not specified it's loaded from the git credentials file
+    required: true
+    default: 'cvacoop/alfresco_helm_charts'
+  git-user:
+    description: 'If you want to override the name of the author/committer of the tag'
+    required: false
+    default: 'Actions Bot'
+  git-email:
+    description: 'If you want to override the email of the author/committer of the tag'
+    required: false
+    default: 'no-reply@no-reply.users.github.com'
+runs:
+  using: composite
+  steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        path: "${{ inputs.chart-path }}/dst"
+        ref: 'master'
+        fetch-depth: 0
+        token: ${{ inputs.git-token }}
+        repository: ${{ inputs.repo-url }}
+    - name: helm release
+      run: |
+        helm repo index . --merge ./dst/${{ inputs.release-path }}/index.yaml
+        cp -f index.yaml ./dst/${{ inputs.release-path }}/
+        cp -f *.tgz ./dst/${{ inputs.release-path }}/
+        cd ./dst
+        git add -A
+        git config --global user.name ${{ inputs.git-username }}
+        git config --global user.email ${{ inputs.git-author-email }}
+        git commit -m "add new chart $GITHUB_ACTION_REPOSITORY"
+        git push
+      shell: bash
+      working-directory: ${{ inputs.chart-path }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.git-token }}
+
+
