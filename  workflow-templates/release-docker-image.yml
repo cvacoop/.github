@@ -1,0 +1,41 @@
+name: Docker Images WFT
+on:
+  push:
+    branches: [$default-branch]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: New version
+        id: version
+        uses: cvacoop/.github/actions/jx-release-version@master
+        with:
+          github-token: ${{ secrets.ACTIONS_TOKEN }}
+          previous-version: "from-tag"
+          tag: true
+      - name: New docker image version
+        uses: cvacoop/.github/actions/github-docker-registry@master
+        with:
+          git-username: ${{ github.actor }}
+          git-token: ${{ secrets.ACTIONS_TOKEN }}
+          image-name: ${{ secrets.DOCKER_IMAGE_NAME }}
+          version: ${{ steps.version.outputs.version }}
+      - name: Promote version
+        uses: cvacoop/.github/actions/jx-updatebot@master
+        with:
+          labels: PR
+          pull-request-title: "promote(dep): update versions into ${{ github.ref_name }}"
+          commit-title: "chore(dep): update ${{ github.repository }} version to ${{ steps.version.outputs.version }}"
+          git-token: ${{ secrets.ACTIONS_TOKEN }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+      - name: Release it
+        run: |
+          gh release create v$VERSION --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}

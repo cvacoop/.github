@@ -1,0 +1,5 @@
+{
+  "name": "Docker Image",
+  "description": "Build and Release Docker Image",
+  "filePatterns": [ "^Dockerfile" ]
+}
