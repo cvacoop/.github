@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: New version
@@ -26,10 +26,7 @@ jobs:
         uses: cvacoop/.github/actions/jx-release-version@master
         with:
           github-token: ${{ secrets.ACTIONS_TOKEN }}
-      - name: update version
-        run: echo $VERSION > VERSION
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
+
       - name: add terraform docs
         run: |
           cd ./actions/
